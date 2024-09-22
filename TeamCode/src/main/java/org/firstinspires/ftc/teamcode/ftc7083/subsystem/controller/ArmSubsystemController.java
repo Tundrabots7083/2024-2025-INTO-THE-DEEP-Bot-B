@@ -1,4 +1,6 @@
-package org.firstinspires.ftc.teamcode.ftc7083.subsystem;
+package org.firstinspires.ftc.teamcode.ftc7083.subsystem.controller;
+
+import org.firstinspires.ftc.teamcode.ftc7083.subsystem.Wrist;
 
 public class ArmSubsystemController  {
     Wrist wrist;

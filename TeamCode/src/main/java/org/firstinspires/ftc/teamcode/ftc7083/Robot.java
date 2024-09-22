@@ -6,6 +6,8 @@ import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.teamcode.ftc7083.subsystem.Arm;
+import org.firstinspires.ftc.teamcode.ftc7083.subsystem.Lift;
 import org.firstinspires.ftc.teamcode.ftc7083.subsystem.MecanumDrive;
 import org.firstinspires.ftc.teamcode.ftc7083.subsystem.Webcam;
 
@@ -21,6 +23,8 @@ public class Robot {
 
     // Subsystems
     public final MecanumDrive mecanumDrive;
+    public final Arm arm;
+    public final Lift lift;
     public final Webcam webcam;
 
     // All lynx module huba
@@ -47,6 +51,8 @@ public class Robot {
 
         // Instantiate all the hardware on the robot
         mecanumDrive = new MecanumDrive(hardwareMap, telemetry);
+        arm = new Arm(hardwareMap, telemetry);
+        lift = new Lift(hardwareMap, telemetry);
         if (opModeType == OpModeType.AUTO) {
             // Create the vision sensor
             webcam = new Webcam("Webcam Front", hardwareMap, telemetry);
