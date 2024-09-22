@@ -1,14 +1,12 @@
 package org.firstinspires.ftc.teamcode.ftc7083.subsystem;
 
 import com.acmerobotics.dashboard.config.Config;
-import com.arcrobotics.ftclib.hardware.motors.MotorEx;
-import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.ftc7083.feedback.MotionProfile;
 import org.firstinspires.ftc.teamcode.ftc7083.feedback.PIDController;
-import org.firstinspires.ftc.teamcode.ftc7083.subsystem.Subsystem;
+import org.firstinspires.ftc.teamcode.ftc7083.hardware.Motor;
 
 /**
  * The arm mechanism that moves the pixel collector from the intake position to the scoring
@@ -27,7 +25,7 @@ public class Arm extends SubsystemBase {
     public static double MIN_POWER = 0.16;
     public static double ACCEPTABLE_ERROR = 10;
 
-    private final MotorEx motor;
+    private final Motor motor;
     private final Telemetry telemetry;
     private final PIDController pidController;
     private double targetPosition = INTAKE_POSITION;
@@ -42,9 +40,9 @@ public class Arm extends SubsystemBase {
     public Arm(HardwareMap hardwareMap, Telemetry telemetry) {
         this.telemetry = telemetry;
 
-        motor = new MotorEx(hardwareMap, "armMotor");
-        motor.motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        motor.motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        motor = new Motor(hardwareMap, telemetry, "armMotor");
+        motor.setMode(Motor.RunMode.STOP_AND_RESET_ENCODER);
+        motor.setMode(Motor.RunMode.RUN_WITHOUT_ENCODER);
 
         pidController = new PIDController(KP, KI, KD);
         motionProfile = new MotionProfile(MAX_ACCELERATION, MAX_VELOCITY, 0, INTAKE_POSITION);
@@ -99,7 +97,7 @@ public class Arm extends SubsystemBase {
      */
     public void setPower(double power) {
         // Apply the power to the arm motor
-        motor.set(power);
+        motor.setPower(power);
 
         telemetry.addData("[ARM] target", targetPosition);
         telemetry.addData("[ARM] power", power);
