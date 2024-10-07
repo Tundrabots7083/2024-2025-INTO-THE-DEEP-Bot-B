@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.ftc7083.hardware;
 
+import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.hardware.DcMotorController;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -15,7 +16,6 @@ public class Motor implements DcMotorEx {
     private final DcMotorEx motorImpl;
     private final Telemetry telemetry;
     private double inchesPerRev;
-    private double degreesPerRev;
 
     /**
      * Instantiate a new motor for the robot.
@@ -54,6 +54,7 @@ public class Motor implements DcMotorEx {
      * @param inchesPerRev the number of inches moved per revolution of the motor
      */
     public void setInchesPerRev(double inchesPerRev) {
+        telemetry.addData("[Motor] set inches per rev", inchesPerRev);
         this.inchesPerRev = inchesPerRev;
     }
 
@@ -64,17 +65,9 @@ public class Motor implements DcMotorEx {
      * @return number of motor ticks to move one degree of rotation
      */
     public double getDegreesPerRev() {
-        return degreesPerRev;
-    }
-
-    /**
-     * Sets the number of motor degrees the device attached to the motor moves per motor revolution.
-     * For a gear ratio of 1:1, this is 360; for 2:1 it would be 180.
-     *
-     * @param degreesPerRev number of degrees achieved per motor revolution
-     */
-    public void setDegreesPerRev(double degreesPerRev) {
-        this.degreesPerRev = degreesPerRev;
+        MotorConfigurationType config = motorImpl.getMotorType();
+        double gearing = config.getGearing(); // 5.0
+        return 360.0 / gearing;
     }
 
     @Override
@@ -224,10 +217,14 @@ public class Motor implements DcMotorEx {
      * @return the current degree offset of the motor
      */
     public double getDegrees() {
-        double ticks = getCurrentPosition();
-        double ticksPerRev = motorImpl.getMotorType().getTicksPerRev();
-        double rotations = ticks / ticksPerRev;
-        return rotations * degreesPerRev;
+        MotorConfigurationType motorType = motorImpl.getMotorType();
+        double ticksPerRev = motorType.getTicksPerRev();
+        double gearing = motorType.getGearing();
+
+        double currentTicks = getCurrentPosition();
+        double rotations = currentTicks / ticksPerRev;
+        double degreesPerRotation = 360.0 / gearing;
+        return rotations * degreesPerRotation;
     }
 
     /**
@@ -239,10 +236,14 @@ public class Motor implements DcMotorEx {
      * @param degrees the degrees to which to set the motor
      */
     public void setDegrees(double degrees) {
-        double rotations = degrees / degreesPerRev;
-        double ticksPerRev = motorImpl.getMotorType().getTicksPerRev();
-        double ticks = rotations * ticksPerRev;
-        setTargetPosition((int) ticks);
+        MotorConfigurationType motorType = motorImpl.getMotorType();
+        double ticksPerRev = motorType.getTicksPerRev();
+        double gearing = motorType.getGearing();
+
+        double outputTicksPerRev = ticksPerRev * gearing;
+        double rotations = degrees / 360.0;
+        double outputTicks = outputTicksPerRev * rotations;
+        setTargetPosition((int) outputTicks);
     }
 
     /**
