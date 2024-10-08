@@ -88,7 +88,7 @@ public class LinearSlide extends SubsystemBase {
         motor.setMotorType(motorConfigurationType);
         motor.setMode(Motor.RunMode.STOP_AND_RESET_ENCODER);
         motor.setMode(Motor.RunMode.RUN_WITHOUT_ENCODER);
-        motor.setDirection(DcMotorSimple.Direction.REVERSE);
+        motor.setDirection(DcMotorSimple.Direction.FORWARD);
         motor.setInchesPerRev(Math.PI * SPOOL_DIAMETER);
     }
 
@@ -97,10 +97,10 @@ public class LinearSlide extends SubsystemBase {
      */
     public void execute() {
         if (!isAtTarget()) {
-            double power = pidController.calculate(targetLength, slideMotor.getInches());
+            double power = pidController.calculate(targetLength, -slideMotor.getInches());
             slideMotor.setPower(power);
             telemetry.addData("[Slide] power", power);
-            telemetry.addData("[Slide] inches", slideMotor.getInches());
+            telemetry.addData("[Slide] inches", -slideMotor.getInches());
             telemetry.addData("[Slide] ticks", slideMotor.getCurrentPosition());
         }
     }
@@ -109,10 +109,10 @@ public class LinearSlide extends SubsystemBase {
      * checks if the length is within the tolerable error and if it is then the motor will stop
      */
     public boolean isAtTarget() {
-        double error = Math.abs(targetLength - slideMotor.getInches());
+        double error = Math.abs(targetLength + slideMotor.getInches());
         telemetry.addData("[Slide] error", error);
         telemetry.addData("[Slide] target", targetLength);
-        telemetry.addData("[Slide] current", slideMotor.getInches());
+        telemetry.addData("[Slide] current", -slideMotor.getInches());
         return error <= TOLERABLE_ERROR;
     }
 }
