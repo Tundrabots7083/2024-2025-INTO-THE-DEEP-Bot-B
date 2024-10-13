@@ -14,27 +14,22 @@ import org.firstinspires.ftc.teamcode.ftc7083.hardware.Motor;
  */
 @Config
 public class Lift extends SubsystemBase {
-    public static double DRIVEN_GEAR_DIAMETER = 2.5;
-    public static double TICKS_PER_REV = 1120.0; // AndyMark NeverRest ticks per rev
-    public double GEARING = 120.0 / 24.0;
+    public static double DRIVEN_GEAR_DIAMETER = 1.5;
+    public static double TICKS_PER_REV = 384.5; // GoBuilda 5203 Series Yellow Jacket
     public static double ACHIEVABLE_MAX_RPM_FRACTION = 1.0;
-
     public static double START_POSITION = 0.0;
     public static double ACCEPTABLE_ERROR = 0.05;
-
-    public static double KP = 0.009;
+    public static double KP = 0.325;
     public static double KI = 0.0;
     public static double KD = 0.0;
-    public static double KG = 0.1;
+    public static double KG = 0.07;
     public static double MIN_POWER = 0.1;
-
     private final Telemetry telemetry;
     private final Motor leftMotor;
     private final Motor rightMotor;
-
-    private final PIDControllerEx leftController;
-    private final PIDControllerEx rightController;
-
+    private final PIDControllerEx leftPID;
+    private final PIDControllerEx rightPID;
+    public double GEARING = 1.0;
     private double targetHeight = START_POSITION;
 
     /**
@@ -48,15 +43,16 @@ public class Lift extends SubsystemBase {
 
         leftMotor = new Motor(hardwareMap, telemetry, "leftLift");
         initializeMotor(leftMotor);
+        leftMotor.setDirection(DcMotor.Direction.REVERSE);
 
         rightMotor = new Motor(hardwareMap, telemetry, "rightLift");
-        rightMotor.setDirection(DcMotor.Direction.REVERSE);
+        rightMotor.setDirection(DcMotor.Direction.FORWARD);
         initializeMotor(rightMotor);
 
-        leftController = new PIDControllerEx(KP, KI, KD, KG);
-        rightController = new PIDControllerEx(KP, KI, KD, KG);
+        leftPID = new PIDControllerEx(KP, KI, KD,KG);
+        rightPID = new PIDControllerEx(KP, KI, KD, KG);
 
-        telemetry.addLine("[LIFT] initialized");
+        telemetry.addLine("[Lift] initialized");
     }
 
     /**
@@ -93,8 +89,8 @@ public class Lift extends SubsystemBase {
     public void setTargetHeight(final double height) {
         if (this.targetHeight != height) {
             this.targetHeight = height;
-            leftController.reset();
-            rightController.reset();
+            leftPID.reset();
+            rightPID.reset();
             telemetry.addData("[Lift] set height", this.targetHeight);
         }
     }
@@ -115,25 +111,12 @@ public class Lift extends SubsystemBase {
         // Read the current position of each motor
         double leftHeight = leftMotor.getInches();
         double rightHeight = rightMotor.getInches();
+        telemetry.addData("[Lift] left height", leftHeight);
+        telemetry.addData("[Lift] right height", rightHeight);
 
-        // Get the error between the two positions
-        double leftError = Math.abs(leftHeight - targetHeight);
-        double rightError = Math.abs(rightHeight - targetHeight);
-        double error = Math.max(leftError, rightError);
-
-        double leftPower, rightPower;
-        if (targetHeight == START_POSITION && error < ACCEPTABLE_ERROR) {
-            leftPower = 0;
-            rightPower = 0;
-        } else {
-            // Calculate the power for each motor using the PID controllers
-            leftPower = leftController.calculate(targetHeight, leftHeight);
-            rightPower = rightController.calculate(targetHeight, rightHeight);
-
-            // Cap the motor power at 1 and -1
-            leftPower = modifyMotorPower(leftPower, MIN_POWER);
-            rightPower = modifyMotorPower(rightPower, MIN_POWER);
-        }
+        // Calculate the power for each motor using the PID controllers
+        double leftPower = leftPID.calculate(targetHeight, leftHeight);
+        double rightPower = rightPID.calculate(targetHeight, rightHeight);
 
         setPower(leftPower, rightPower);
     }
@@ -149,10 +132,8 @@ public class Lift extends SubsystemBase {
         leftMotor.setPower(leftPower);
         rightMotor.setPower(rightPower);
 
-        telemetry.addData("[LIFT] left power", leftPower);
-        telemetry.addData("[LIFT] right power", rightPower);
-        telemetry.addData("[LIFT] left height", leftMotor.getInches());
-        telemetry.addData("[LIFT] right height", rightMotor.getInches());
+        telemetry.addData("[Lift] left power", leftPower);
+        telemetry.addData("[Lift] right power", rightPower);
     }
 
     /**
@@ -164,15 +145,20 @@ public class Lift extends SubsystemBase {
     public boolean isAtTarget() {
         final boolean finished = getError() < ACCEPTABLE_ERROR;
 
-        telemetry.addData("[LIFT] at target", finished);
+        telemetry.addData("[Lift] at target", finished);
         return finished;
     }
 
+    /**
+     * Gets the maximum error between the position of each motor and the target position.
+     *
+     * @return the maximum error between the position of each motor and the target position
+     */
     private double getError() {
         double leftError = Math.abs(leftMotor.getInches() - targetHeight);
         double rightError = Math.abs(rightMotor.getInches() - targetHeight);
-        telemetry.addData("[LIFT] left error", leftError);
-        telemetry.addData("[LIFT] right error", rightError);
+        telemetry.addData("[Lift] left error", leftError);
+        telemetry.addData("[Lift] right error", rightError);
 
         return Math.max(leftError, rightError);
     }

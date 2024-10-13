@@ -2,11 +2,24 @@ package org.firstinspires.ftc.teamcode.ftc7083.feedback;
 
 import androidx.annotation.NonNull;
 
+import com.acmerobotics.dashboard.FtcDashboard;
+
 /**
  * A PID controller that uses a feed forward mechanism in its calculations.
  */
 public class PIDControllerEx extends PIDController {
     private final FeedForward ff;
+
+    /**
+     * Creates a new PID controller without any FeedForward component.
+     *
+     * @param Kp proportional term, multiplied directly by the state error
+     * @param Ki integral term, multiplied directly by the state error integral
+     * @param Kd derivative term, multiplied directly by the state error rate of change
+     */
+    public PIDControllerEx(double Kp, double Ki, double Kd) {
+        this(Kp, Ki, Kd, 0);
+    }
 
     /**
      * Creates a new PID controller with a constant gravity FeedForward component.
@@ -36,7 +49,9 @@ public class PIDControllerEx extends PIDController {
     @Override
     public double calculate(double reference, double state) {
         double power = super.calculate(reference, state);
-        return power + ff.calculate(state);
+        double kg = ff.calculate(state);
+        FtcDashboard.getInstance().getTelemetry().addData("[PID] Kg", kg);
+        return power + kg;
     }
 
     /**
